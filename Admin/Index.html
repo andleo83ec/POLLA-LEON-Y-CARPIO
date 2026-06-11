@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consolidado Polla 2026 · León y Carpio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --bg:#0a130e; --panel:#10201a; --panel2:#16271f; --line:#23382e;
+    --txt:#e9f3ec; --mut:#8fae9d; --accent:#caff3f; --gold:#ffcf4a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(900px 500px at 80% -10%, #1b3a2a 0%, transparent 60%),
+      radial-gradient(800px 500px at -10% 10%, #1a2f44 0%, transparent 55%),
+      var(--bg);
+    color:var(--txt);font-family:"Archivo",system-ui,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 14px 90px}
+  .kick{font:600 12px/1 "Archivo";letter-spacing:.22em;color:var(--accent);text-transform:uppercase}
+  h1{font-family:"Unbounded";font-weight:800;font-size:clamp(24px,6vw,38px);margin:6px 0 2px;letter-spacing:-.01em}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+  .card h2{font-family:"Unbounded";font-weight:700;font-size:16px;margin:0 0 4px}
+  .card h2 span{color:var(--accent)}
+  .card .hint{font-size:12.5px;color:var(--mut);margin-bottom:10px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:11px 15px;
+    border-radius:11px;font:700 13px "Archivo";cursor:pointer;transition:.12s;text-align:center}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);color:#0a130e;border-color:var(--accent)}
+  .btn.gold{background:var(--gold);color:#241a00;border-color:var(--gold)}
+  .btn.sm{padding:7px 10px;font-size:12px}
+  input[type=file]{display:none}
+  .real{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .real .f label{display:block;font:700 10px "Archivo";letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:3px}
+  select,.inp{width:100%;background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:9px 8px;font:500 14px "Archivo";-webkit-appearance:none;appearance:none}
+  select:focus,.inp:focus{outline:none;border-color:var(--accent)}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-size:13px}
+  th{background:var(--panel2);color:var(--mut);font:700 10.5px "Archivo";letter-spacing:.04em;text-transform:uppercase;
+    padding:9px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0}
+  td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  td.num{text-align:center;font-family:"Unbounded";color:var(--mut);width:30px}
+  td .inp,td select{min-width:120px;padding:7px 7px;font-size:13px}
+  td.pts{text-align:center;font-weight:700;color:var(--accent);font-size:15px}
+  tr.win td{background:rgba(255,207,74,.10)}
+  tr.win td.num{color:var(--gold)}
+  .del{border:1px solid var(--line);background:transparent;color:#d98a93;border-radius:7px;
+    width:28px;height:28px;cursor:pointer;font-size:13px}
+  .del:hover{border-color:#d98a93}
+  .empty{color:var(--mut);font-size:13px;padding:16px;text-align:center}
+  .count{font-size:12.5px;color:var(--mut);margin:8px 2px 0}
+  .ok{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kick">Polla Mundial 2026 · León y Carpio</div>
+  <h1>Consolidado de pollas</h1>
+  <div class="sub">Carga las pollas de los participantes, arma el cuadro y (opcional) calcula los puntos contra el resultado real.</div>
+
+  <div class="card">
+    <h2>1 · Cargar <span>pollas</span></h2>
+    <div class="hint">Lo más confiable es el <b>JSON</b> de cada participante (botón “Guardar JSON” de su app). También puedes intentar con los <b>PDF</b>; si alguno no se lee bien, lo corriges abajo en el cuadro.</div>
+    <div class="btns">
+      <label class="btn primary" for="files">⬆ Cargar JSON / PDF</label>
+      <input type="file" id="files" accept="application/json,application/pdf" multiple onchange="loadFiles(event)">
+      <button class="btn" onclick="addRow()">＋ Agregar fila manual</button>
+    </div>
+    <div class="count" id="loadMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>2 · Resultado <span>real</span> <span style="color:var(--mut);font-weight:400;font-size:12px">(opcional)</span></h2>
+    <div class="hint">Cuando termine el Mundial, ingresa los 4 finalistas reales para calcular y ordenar los puntos.</div>
+    <div class="real" id="realBox"></div>
+    <div class="btns" style="margin-top:10px">
+      <button class="btn sm" onclick="clearReal()">Limpiar resultado</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3 · <span>Cuadro</span></h2>
+    <div class="hint">Edita cualquier celda directamente. Con resultado real cargado, se ordena por puntos.</div>
+    <div class="scroll"><table id="tbl"></table></div>
+    <div class="btns" style="margin-top:12px">
+      <button class="btn gold" onclick="exportPDF()">⬇ Cuadro en PDF</button>
+      <button class="btn primary" onclick="exportCSV()">⬇ Cuadro en CSV</button>
+      <button class="btn" onclick="saveAll()">⬇ Guardar consolidado (JSON)</button>
+      <label class="btn" for="loadAll">⬆ Cargar consolidado</label>
+      <input type="file" id="loadAll" accept="application/json" onchange="loadConsolidado(event)">
+    </div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const GROUPS={
+  A:[["🇲🇽","México"],["🇿🇦","Sudáfrica"],["🇰🇷","Corea del Sur"],["🇨🇿","Chequia"]],
+  B:[["🇨🇦","Canadá"],["🇨🇭","Suiza"],["🇶🇦","Qatar"],["🇧🇦","Bosnia y H."]],
+  C:[["🇧🇷","Brasil"],["🇲🇦","Marruecos"],["🇭🇹","Haití"],["🏴","Escocia"]],
+  D:[["🇺🇸","Estados Unidos"],["🇵🇾","Paraguay"],["🇦🇺","Australia"],["🇹🇷","Turquía"]],
+  E:[["🇩🇪","Alemania"],["🇨🇼","Curazao"],["🇨🇮","Costa de Marfil"],["🇪🇨","Ecuador"]],
+  F:[["🇳🇱","Países Bajos"],["🇯🇵","Japón"],["🇹🇳","Túnez"],["🇸🇪","Suecia"]],
+  G:[["🇧🇪","Bélgica"],["🇪🇬","Egipto"],["🇮🇷","Irán"],["🇳🇿","Nueva Zelanda"]],
+  H:[["🇪🇸","España"],["🇨🇻","Cabo Verde"],["🇸🇦","Arabia Saudita"],["🇺🇾","Uruguay"]],
+  I:[["🇫🇷","Francia"],["🇸🇳","Senegal"],["🇳🇴","Noruega"],["🇮🇶","Iraq"]],
+  J:[["🇦🇷","Argentina"],["🇩🇿","Argelia"],["🇦🇹","Austria"],["🇯🇴","Jordania"]],
+  K:[["🇵🇹","Portugal"],["🇨🇴","Colombia"],["🇺🇿","Uzbekistán"],["🇨🇩","RD Congo"]],
+  L:[["🏴","Inglaterra"],["🇭🇷","Croacia"],["🇬🇭","Ghana"],["🇵🇦","Panamá"]]
+};
+const TEAMS=[];
+Object.keys(GROUPS).forEach(g=>GROUPS[g].forEach((t,i)=>TEAMS.push({key:g+i,flag:t[0],name:t[1],group:g})));
+function team(key){return TEAMS.find(t=>t.key===key)||null;}
+const norm=s=>(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+function teamByName(name){const n=norm(name);return TEAMS.find(t=>norm(t.name)===n)||TEAMS.find(t=>n&&norm(t.name).includes(n))||null;}
+
+const POSCOLS=[["champ","Campeón",4],["second","Subcampeón",3],["third","Tercero",2],["fourth","Cuarto",1]];
+const CLASIF=2;
+
+let rows=[];            // {nombre,telefono,mail,champ,second,third,fourth}
+let real={champ:null,second:null,third:null,fourth:null};
+
+/* ---------- carga de archivos ---------- */
+async function loadFiles(ev){
+  const files=[...ev.target.files]; let ok=0, fail=0;
+  document.getElementById("loadMsg").textContent="Procesando "+files.length+" archivo(s)...";
+  for(const f of files){
+    try{
+      if(f.name.toLowerCase().endsWith(".json")||f.type==="application/json"){
+        const o=JSON.parse(await f.text());
+        if(Array.isArray(o)) o.forEach(p=>rows.push(cleanRow(p))); else rows.push(cleanRow(o));
+        ok++;
+      }else if(f.name.toLowerCase().endsWith(".pdf")||f.type==="application/pdf"){
+        const r=await parsePDF(await f.arrayBuffer());
+        rows.push(r); ok++;
+      }
+    }catch(e){ console.warn(e); fail++; }
+  }
+  ev.target.value="";
+  document.getElementById("loadMsg").innerHTML=
+    `<span class="ok">✓ ${ok} cargada(s)</span>`+(fail?` · ${fail} con error (revisa/edita manual)`:"");
+  render();
+}
+function cleanRow(o){
+  return {nombre:o.nombre||"",telefono:o.telefono||"",mail:o.mail||"",
+    champ:o.champ||null,second:o.second||null,third:o.third||null,fourth:o.fourth||null};
+}
+async function parsePDF(buf){
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let text="";
+  for(let p=1;p<=pdf.numPages;p++){
+    const pg=await pdf.getPage(p); const c=await pg.getTextContent();
+    text+=" "+c.items.map(it=>it.str).join(" ");
+  }
+  const clean=v=>{v=(v||"").replace(/_+/g,"").trim();return v;};
+  const between=(a,b)=>{const i=text.indexOf(a);if(i<0)return "";const from=i+a.length;
+    const j=b?text.indexOf(b,from):-1;return clean(text.substring(from,j<0?from+50:j));};
+  const nombre=between("NOMBRE:","TELÉFONO:")||between("NOMBRE:","MAIL:");
+  const telefono=between("TELÉFONO:","MAIL:");
+  const mail=between("MAIL:","Ubicación")||between("MAIL:","Equipo");
+  // equipos por etiqueta de posición
+  const findTeam=(label)=>{
+    const i=text.indexOf(label); if(i<0)return null;
+    const slice=text.substr(i+label.length,45);
+    const ns=norm(slice);
+    let best=null,bestPos=999;
+    TEAMS.forEach(t=>{const p=ns.indexOf(norm(t.name));if(p>=0&&p<bestPos){bestPos=p;best=t.key;}});
+    return best;
+  };
+  return {nombre,telefono,mail,
+    champ:findTeam("Campeón"),second:findTeam("Subcampeón"),
+    third:findTeam("Tercer puesto"),fourth:findTeam("Cuarto puesto")};
+}
+function addRow(){rows.push({nombre:"",telefono:"",mail:"",champ:null,second:null,third:null,fourth:null});render();}
+
+/* ---------- resultado real + puntaje ---------- */
+function teamSelect(val,onchange,allowEmpty){
+  let o=`<option value="">${allowEmpty?"—":"— elige —"}</option>`;
+  Object.keys(GROUPS).forEach(g=>{o+=`<optgroup label="Grupo ${g}">`;
+    GROUPS[g].forEach((t,i)=>{const k=g+i;o+=`<option value="${k}" ${val===k?"selected":""}>${t[0]} ${t[1]}</option>`;});
+    o+=`</optgroup>`;});
+  return `<select onchange="${onchange}">${o}</select>`;
+}
+function renderReal(){
+  const box=document.getElementById("realBox");
+  box.innerHTML=POSCOLS.map(([id,lbl,ub])=>
+    `<div class="f"><label>${lbl} · ${CLASIF+ub} pts</label>${teamSelect(real[id],`setReal('${id}',this.value)`)}</div>`).join("");
+}
+function setReal(id,v){real[id]=v||null;render();}
+function clearReal(){real={champ:null,second:null,third:null,fourth:null};render();}
+function realActive(){return POSCOLS.some(([id])=>real[id]);}
+
+function scoreRow(r){
+  // 2 pts por cada finalista real que el participante también puso como finalista
+  // + puntos de ubicación si acertó la posición exacta
+  const picks={champ:r.champ,second:r.second,third:r.third,fourth:r.fourth};
+  const realTeams=POSCOLS.map(([id])=>real[id]).filter(Boolean);
+  const myTeams=Object.values(picks).filter(Boolean);
+  let pts=0, partic=0, ubic=0;
+  realTeams.forEach(rt=>{ if(myTeams.includes(rt)){partic+=CLASIF;} });
+  POSCOLS.forEach(([id,lbl,ub])=>{ if(real[id]&&picks[id]===real[id]) ubic+=ub; });
+  pts=partic+ubic;
+  return {pts,partic,ubic};
+}
+
+/* ---------- render cuadro ---------- */
+function render(){
+  renderReal();
+  const tbl=document.getElementById("tbl");
+  const active=realActive();
+  let order=rows.map((r,i)=>i);
+  if(active) order.sort((a,b)=>scoreRow(rows[b]).pts-scoreRow(rows[a]).pts);
+
+  let h=`<tr><th>#</th><th>Nombre</th><th>Teléfono</th>
+    <th>🥇 Campeón</th><th>🥈 Subcamp.</th><th>🥉 Tercero</th><th>4° Cuarto</th>`;
+  if(active)h+=`<th>Puntos</th>`; h+=`<th></th></tr>`;
+
+  if(rows.length===0){
+    h+=`<tr><td colspan="${active?9:8}" class="empty">Aún no hay pollas cargadas. Usa “Cargar JSON / PDF” o “Agregar fila manual”.</td></tr>`;
+  }else{
+    order.forEach((ri,visualIdx)=>{
+      const r=rows[ri]; const sc=active?scoreRow(r):null;
+      const winCls=active&&visualIdx===0&&sc.pts>0?"win":"";
+      h+=`<tr class="${winCls}">
+        <td class="num">${visualIdx+1}</td>
+        <td><input class="inp" value="${esc(r.nombre)}" oninput="upd(${ri},'nombre',this.value)" placeholder="nombre"></td>
+        <td><input class="inp" value="${esc(r.telefono)}" oninput="upd(${ri},'telefono',this.value)" placeholder="teléfono"></td>
+        ${POSCOLS.map(([id])=>`<td>${teamSelect(r[id],`upd(${ri},'${id}',this.value)`,true)}</td>`).join("")}
+        ${active?`<td class="pts" title="Particip. ${sc.partic} + ubic. ${sc.ubic}">${sc.pts}</td>`:""}
+        <td><button class="del" onclick="delRow(${ri})">✕</button></td>
+      </tr>`;
+    });
+  }
+  tbl.innerHTML=h;
+}
+function esc(s){return (s||"").replace(/"/g,"&quot;");}
+function upd(i,k,v){rows[i][k]=(k==="nombre"||k==="telefono"||k==="mail")?v:(v||null); if(k!=="nombre"&&k!=="telefono")render();}
+function delRow(i){rows.splice(i,1);render();}
+
+/* ---------- exportar ---------- */
+function teamName(key){const t=team(key);return t?t.name:"";}
+function exportCSV(){
+  const active=realActive();
+  let head=["#","Nombre","Telefono","Mail","Campeon","Subcampeon","Tercero","Cuarto"];
+  if(active)head.push("Puntos");
+  let order=rows.map((r,i)=>i);
+  if(active)order.sort((a,b)=>scoreRow(rows[b]).pts-scoreRow(rows[a]).pts);
+  const lines=[head.join(",")];
+  order.forEach((ri,idx)=>{
+    const r=rows[ri];
+    const cells=[idx+1,r.nombre,r.telefono,r.mail,teamName(r.champ),teamName(r.second),teamName(r.third),teamName(r.fourth)];
+    if(active)cells.push(scoreRow(r).pts);
+    lines.push(cells.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(","));
+  });
+  dl(new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"}),"consolidado-polla-2026.csv");
+}
+function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:"pt",format:"a4",orientation:"landscape"});
+  const W=doc.internal.pageSize.getWidth();
+  doc.setFillColor(10,19,14);doc.rect(0,0,W,64,"F");
+  doc.setTextColor(202,255,63);doc.setFont("helvetica","bold");doc.setFontSize(16);
+  doc.text("CONSOLIDADO POLLA MUNDIALISTA 2026 · LEÓN Y CARPIO",30,38);
+  const active=realActive();
+  let order=rows.map((r,i)=>i);
+  if(active)order.sort((a,b)=>scoreRow(rows[b]).pts-scoreRow(rows[a]).pts);
+  const head=["#","Nombre","Teléfono","Campeón","Subcampeón","Tercero","Cuarto"];
+  if(active)head.push("Puntos");
+  const body=order.map((ri,idx)=>{
+    const r=rows[ri];
+    const row=[idx+1,r.nombre,r.telefono,teamName(r.champ),teamName(r.second),teamName(r.third),teamName(r.fourth)];
+    if(active)row.push(scoreRow(r).pts);
+    return row;
+  });
+  doc.autoTable({startY:80,head:[head],body,theme:"grid",
+    styles:{font:"helvetica",fontSize:9,cellPadding:5,textColor:[30,30,30]},
+    headStyles:{fillColor:[16,32,26],textColor:[202,255,63],fontStyle:"bold"},
+    columnStyles:active?{7:{halign:"center",fontStyle:"bold"}}:{},
+    didParseCell:d=>{ if(active&&d.section==="body"&&d.row.index===0)d.cell.styles.fillColor=[255,247,220]; }
+  });
+  doc.save("consolidado-polla-2026.pdf");
+}
+function dl(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);}
+
+/* guardar/cargar todo el consolidado */
+function saveAll(){dl(new Blob([JSON.stringify({rows,real},null,2)],{type:"application/json"}),"consolidado-polla-2026.json");}
+function loadConsolidado(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{try{const o=JSON.parse(rd.result);
+    rows=(o.rows||[]).map(cleanRow);real={...{champ:null,second:null,third:null,fourth:null},...(o.real||{})};
+    render();}catch(e){alert("JSON inválido");}};
+  rd.readAsText(f);ev.target.value="";
+}
+
+render();
+</script>
+</body>
+</html>
