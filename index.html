@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polla Mundial 2026 · León y Carpio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --bg:#0a130e; --panel:#10201a; --panel2:#16271f; --line:#23382e;
+    --txt:#e9f3ec; --mut:#8fae9d; --accent:#caff3f; --gold:#ffcf4a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(900px 500px at 80% -10%, #1b3a2a 0%, transparent 60%),
+      radial-gradient(800px 500px at -10% 10%, #1a2f44 0%, transparent 55%),
+      var(--bg);
+    color:var(--txt);font-family:"Archivo",system-ui,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:620px;margin:0 auto;padding:20px 14px 90px}
+  .kick{font:600 12px/1 "Archivo";letter-spacing:.22em;color:var(--accent);text-transform:uppercase}
+  h1{font-family:"Unbounded";font-weight:800;font-size:clamp(26px,7vw,42px);margin:6px 0 2px;letter-spacing:-.01em}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:20px}
+  .slot{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;
+    display:flex;align-items:center;gap:12px}
+  .medal{font-family:"Unbounded";font-weight:800;width:46px;height:46px;border-radius:12px;flex:none;
+    display:flex;align-items:center;justify-content:center;font-size:18px}
+  .m1{background:rgba(255,207,74,.18);color:var(--gold);border:1px solid var(--gold)}
+  .m2{background:rgba(200,210,215,.15);color:#cfd8dc;border:1px solid #9fb0b5}
+  .m3{background:rgba(205,127,80,.18);color:#e0a06f;border:1px solid #c87f50}
+  .m4{background:rgba(143,174,157,.15);color:var(--mut);border:1px solid var(--line)}
+  .slot .body{flex:1;min-width:0}
+  .slot .pos{font:700 11px "Archivo";letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .slot .pts{color:var(--accent);font-weight:700}
+  select{width:100%;margin-top:5px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    border-radius:10px;padding:11px 10px;font:600 15px "Archivo";-webkit-appearance:none;appearance:none}
+  select:focus{outline:none;border-color:var(--accent)}
+  .score{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px 14px 14px;margin:18px 0}
+  .score h2{font-family:"Unbounded";font-weight:700;font-size:17px;margin:10px 0 8px}
+  .score h2 span{color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{color:var(--mut);font:700 10.5px "Archivo";letter-spacing:.05em;text-transform:uppercase;
+    text-align:center;padding:7px 4px;border-bottom:1px solid var(--line)}
+  th:nth-child(2){text-align:left}
+  td{padding:9px 4px;border-bottom:1px solid var(--line);text-align:center}
+  td.team{text-align:left;font-weight:600}
+  td.acc{color:var(--accent);font-weight:700}
+  tr.c1 td{background:rgba(255,207,74,.08)}
+  tr.tot td{font-family:"Unbounded";font-weight:700;background:var(--panel2)}
+  .fl{font-size:17px;margin-right:5px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .btn{flex:1;min-width:140px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);
+    padding:13px 14px;border-radius:12px;font:700 14px "Archivo";cursor:pointer;transition:.12s;text-align:center}
+  .btn:hover{border-color:var(--accent)}
+  .btn.gold{background:var(--gold);color:#241a00;border-color:var(--gold)}
+  .btn.primary{background:var(--accent);color:#0a130e;border-color:var(--accent)}
+  .note{font-size:12.5px;color:var(--mut);margin-top:12px}
+  .warn{background:rgba(122,47,58,.22);border:1px solid #7a2f3a;color:#ffc9d0;padding:9px 12px;
+    border-radius:10px;font-size:13px;margin-bottom:14px;display:none}
+  .warn.show{display:block}
+  input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kick">FIFA World Cup · LEÓN Y CARPIO · Valor $20</div>
+  <h1>Polla de Finalistas 2026</h1>
+  <div class="sub">Elige los 4 finalistas del Mundial. Cada finalista suma 2 pts por participar + los puntos de su posición.</div>
+
+  <div class="warn" id="warn">Tienes equipos repetidos. Cada finalista debe ser distinto.</div>
+
+  <div id="slots"></div>
+
+  <div class="score">
+    <h2>Tu <span>hoja de puntos</span></h2>
+    <table id="tbl"></table>
+  </div>
+
+  <div class="btns">
+    <button class="btn gold" onclick="makePDF()">⬇ Generar / compartir PDF</button>
+    <button class="btn primary" onclick="exportJSON()">⬇ Guardar JSON</button>
+    <label class="btn" for="imp">⬆ Cargar JSON</label>
+    <input type="file" id="imp" accept="application/json" onchange="importJSON(event)">
+    <button class="btn" onclick="resetAll()">↻ Limpiar</button>
+  </div>
+  <div class="note">No hay guardado automático: usa <b>Guardar / Cargar JSON</b> para conservar tu polla.
+  En iPhone, el botón de PDF abre la hoja para compartir (Mail, Archivos, AirDrop).</div>
+</div>
+
+<script>
+/* Equipos por grupo — sorteo FIFA 5-dic-2025 */
+const GROUPS={
+  A:[["🇲🇽","México"],["🇿🇦","Sudáfrica"],["🇰🇷","Corea del Sur"],["🇨🇿","Chequia"]],
+  B:[["🇨🇦","Canadá"],["🇨🇭","Suiza"],["🇶🇦","Qatar"],["🇧🇦","Bosnia y H."]],
+  C:[["🇧🇷","Brasil"],["🇲🇦","Marruecos"],["🇭🇹","Haití"],["🏴","Escocia"]],
+  D:[["🇺🇸","Estados Unidos"],["🇵🇾","Paraguay"],["🇦🇺","Australia"],["🇹🇷","Turquía"]],
+  E:[["🇩🇪","Alemania"],["🇨🇼","Curazao"],["🇨🇮","Costa de Marfil"],["🇪🇨","Ecuador"]],
+  F:[["🇳🇱","Países Bajos"],["🇯🇵","Japón"],["🇹🇳","Túnez"],["🇸🇪","Suecia"]],
+  G:[["🇧🇪","Bélgica"],["🇪🇬","Egipto"],["🇮🇷","Irán"],["🇳🇿","Nueva Zelanda"]],
+  H:[["🇪🇸","España"],["🇨🇻","Cabo Verde"],["🇸🇦","Arabia Saudita"],["🇺🇾","Uruguay"]],
+  I:[["🇫🇷","Francia"],["🇸🇳","Senegal"],["🇳🇴","Noruega"],["🇮🇶","Iraq"]],
+  J:[["🇦🇷","Argentina"],["🇩🇿","Argelia"],["🇦🇹","Austria"],["🇯🇴","Jordania"]],
+  K:[["🇵🇹","Portugal"],["🇨🇴","Colombia"],["🇺🇿","Uzbekistán"],["🇨🇩","RD Congo"]],
+  L:[["🏴","Inglaterra"],["🇭🇷","Croacia"],["🇬🇭","Ghana"],["🇵🇦","Panamá"]]
+};
+const TEAMS=[];
+Object.keys(GROUPS).forEach(g=>GROUPS[g].forEach((t,i)=>TEAMS.push({key:g+i,flag:t[0],name:t[1],group:g})));
+function team(key){return TEAMS.find(t=>t.key===key)||null;}
+
+const POS=[
+  {id:"champ", label:"Campeón", medal:"m1", emoji:"🥇", ubic:4},
+  {id:"second",label:"Subcampeón", medal:"m2", emoji:"🥈", ubic:3},
+  {id:"third", label:"Tercer puesto", medal:"m3", emoji:"🥉", ubic:2},
+  {id:"fourth",label:"Cuarto puesto", medal:"m4", emoji:"4°", ubic:1}
+];
+const CLASIF=2;
+
+let state={champ:null,second:null,third:null,fourth:null};
+
+function chosen(exceptId){return POS.filter(p=>p.id!==exceptId).map(p=>state[p.id]).filter(Boolean);}
+function hasDupes(){const v=POS.map(p=>state[p.id]).filter(Boolean);return new Set(v).size!==v.length;}
+
+function renderSlots(){
+  const root=document.getElementById("slots"); root.innerHTML="";
+  POS.forEach(p=>{
+    const taken=chosen(p.id);
+    let opts=`<option value="">— elige equipo —</option>`;
+    Object.keys(GROUPS).forEach(g=>{
+      opts+=`<optgroup label="Grupo ${g}">`;
+      GROUPS[g].forEach((t,i)=>{
+        const key=g+i, dis=taken.includes(key)?"disabled":"";
+        const sel=state[p.id]===key?"selected":"";
+        opts+=`<option value="${key}" ${sel} ${dis}>${t[0]} ${t[1]}</option>`;
+      });
+      opts+=`</optgroup>`;
+    });
+    const el=document.createElement("div"); el.className="slot";
+    el.innerHTML=`
+      <div class="medal ${p.medal}">${p.emoji}</div>
+      <div class="body">
+        <div class="pos">${p.label} · <span class="pts">${CLASIF+p.ubic} pts</span></div>
+        <select onchange="pick('${p.id}',this.value)">${opts}</select>
+      </div>`;
+    root.appendChild(el);
+  });
+}
+function pick(id,val){ state[id]=val||null; renderAll(); }
+
+function renderTable(){
+  document.getElementById("warn").classList.toggle("show",hasDupes());
+  let total=0;
+  let h=`<tr><th>Ubicación</th><th>Equipo</th><th>Particip.</th><th>Ubic.</th><th>Acum.</th></tr>`;
+  POS.forEach((p,idx)=>{
+    const t=team(state[p.id]); const acc=CLASIF+p.ubic; total+=acc;
+    h+=`<tr class="${idx===0?"c1":""}">
+      <td style="font-weight:700">${idx+1}. ${p.label}</td>
+      <td class="team">${t?`<span class="fl">${t.flag}</span>${t.name}`:"<span style='color:var(--mut)'>—</span>"}</td>
+      <td>${CLASIF}</td><td>${p.ubic}</td><td class="acc">${acc}</td></tr>`;
+  });
+  h+=`<tr class="tot"><td>TOTAL</td><td></td><td></td><td></td><td class="acc">${total}</td></tr>`;
+  document.getElementById("tbl").innerHTML=h;
+}
+function renderAll(){renderSlots();renderTable();}
+
+async function makePDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:"pt",format:"a4"});
+  const W=doc.internal.pageSize.getWidth();
+  doc.setFillColor(10,19,14); doc.rect(0,0,W,90,"F");
+  doc.setTextColor(202,255,63); doc.setFont("helvetica","bold"); doc.setFontSize(19);
+  doc.text("POLLA MUNDIALISTA 2026  ·  LEÓN Y CARPIO",40,44);
+  doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont("helvetica","normal");
+  doc.text("Finalistas · Valor de la polla: $20",40,68);
+
+  doc.setTextColor(40,40,40); doc.setFontSize(11); let y=120;
+  doc.text("NOMBRE: ______________________________________",40,y); y+=22;
+  doc.text("TELÉFONO: ____________________________________",40,y); y+=22;
+  doc.text("MAIL: _________________________________________",40,y);
+
+  const body=[]; let total=0;
+  POS.forEach((p,idx)=>{
+    const t=team(state[p.id]); const acc=CLASIF+p.ubic; total+=acc;
+    body.push([`${idx+1}. ${p.label}`, t?t.name:"—", String(CLASIF), String(p.ubic), String(acc)]);
+  });
+  body.push(["TOTAL","","","",String(total)]);
+
+  doc.autoTable({
+    startY:y+18,
+    head:[["Ubicación final","Equipo","Pts. participación","Pts. ubicación","Puntaje acumulado"]],
+    body, theme:"grid",
+    styles:{font:"helvetica",fontSize:10,cellPadding:7,textColor:[30,30,30]},
+    headStyles:{fillColor:[16,32,26],textColor:[202,255,63],fontStyle:"bold",halign:"center"},
+    columnStyles:{0:{fontStyle:"bold",cellWidth:130},1:{cellWidth:150},
+      2:{halign:"center"},3:{halign:"center"},4:{halign:"center",fontStyle:"bold"}},
+    didParseCell:function(d){
+      if(d.row.index===0&&d.section==="body")d.cell.styles.fillColor=[255,247,220];
+      if(d.row.index===body.length-1)d.cell.styles.fillColor=[230,235,230];
+    }
+  });
+  doc.setFontSize(8); doc.setTextColor(120,120,120);
+  doc.text("Polla de finalistas · 2 pts por participar + 4/3/2/1 por ubicación.",40,doc.internal.pageSize.getHeight()-30);
+
+  const blob=doc.output("blob");
+  const file=new File([blob],"polla-finalistas-2026.pdf",{type:"application/pdf"});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title:"Polla Mundial 2026"}); return; }
+    catch(e){ if(e&&e.name==="AbortError") return; }
+  }
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,"_blank");
+  if(!win){const a=document.createElement("a");a.href=url;a.download="polla-finalistas-2026.pdf";document.body.appendChild(a);a.click();a.remove();}
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="polla-finalistas-2026.json"; a.click(); URL.revokeObjectURL(a.href);
+}
+function importJSON(ev){
+  const f=ev.target.files[0]; if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ const o=JSON.parse(rd.result);
+    state={champ:o.champ||null,second:o.second||null,third:o.third||null,fourth:o.fourth||null};
+    renderAll(); }catch(e){alert("JSON inválido");} };
+  rd.readAsText(f); ev.target.value="";
+}
+function resetAll(){ if(confirm("¿Limpiar tu selección?")){state={champ:null,second:null,third:null,fourth:null};renderAll();} }
+
+renderAll();
+</script>
+</body>
+</html>
